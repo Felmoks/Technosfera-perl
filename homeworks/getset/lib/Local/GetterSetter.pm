@@ -2,6 +2,7 @@ package Local::GetterSetter;
 
 use strict;
 use warnings;
+use 5.010;
 
 =encoding utf8
 
@@ -48,8 +49,10 @@ sub create_getset {
 
 sub import {
     my ($package) = caller();
+    my ($class, @vars) = @_;
 
-    for my $var (@_) {
+    for my $var (@vars) {
+        say $var;
         create_getset($package, $var);
     }
 }
