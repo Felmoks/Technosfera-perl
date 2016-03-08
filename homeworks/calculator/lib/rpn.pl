@@ -25,11 +25,11 @@ require "$FindBin::Bin/../lib/tokenize.pl";
 our %ops = (
     'U+' => {
         assoc   => 'right',
-        order   => 4,
+        order   => 3,
     }, 
     'U-' => {
         assoc   => 'right',
-        order   => 4,
+        order   => 3,
     }, 
     '^'  => {
         assoc   => 'right',
@@ -90,6 +90,9 @@ sub rpn {
                     push @rpn, pop @opstack;
                 }
                 pop @opstack;
+            }
+            default {
+                die('Unknown token');
             }
 		}
 	}

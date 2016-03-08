@@ -29,15 +29,21 @@ sub evaluate {
             }
             when (m/^U[\-+]$/) {
                 my ($unary) = (m/^U([\-+])$/);
+
                 $op1 = pop @valstack;
+
                 $res = eval $unary . '(' . $op1 . ')';
+
                 push @valstack, $res;
             }
             default {
                 if ($token eq '^') { $token = '**' };
+
                 $op2 = pop @valstack;
                 $op1 = pop @valstack;
+
                 $res = eval $op1 . $token . $op2;
+
                 push @valstack, $res;
             }
         }

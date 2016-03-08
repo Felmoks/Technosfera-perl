@@ -44,16 +44,19 @@ sub tokenize($) {
         given ($res[$i]) {
             when ($number) {
                 die('Expecting operator') if $expect eq 'operator';
+
                 $res[$i] = 0+$res[$i];
                 $expect = 'operator';
             }
             when ('(') {
                 die('Expecting operator') if $expect eq 'operator';
+
                 $parens_count += 1;
                 $expect = 'operand';
             }
             when (')') {
                 die('Expecting operand') if $expect eq 'operand';
+
                 $parens_count -= 1;
                 die('Unmatched closing paren') if $parens_count < 0;
                 $expect = 'operator';
@@ -69,8 +72,11 @@ sub tokenize($) {
             }
             when (['*', '/', '^']) {
                 die('Expecting operand') if $expect eq 'operand';
-                    $expect = 'operand';
 
+                $expect = 'operand';
+            }
+            default {
+                die('Unknown token');
             }
         }
     }
