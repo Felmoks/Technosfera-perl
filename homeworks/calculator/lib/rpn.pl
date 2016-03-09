@@ -77,7 +77,7 @@ sub rpn {
                 push @rpn, $token;
 			}
             when ([keys %ops]) {
-                while (should_be_popped($opstack[-1], $token)) {
+                while (@opstack > 0 && should_be_popped($opstack[-1], $token)) {
                     push @rpn, pop @opstack;
                 }
                 push @opstack, $token;
