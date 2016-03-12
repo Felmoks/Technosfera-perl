@@ -6,7 +6,7 @@ use List::Util qw(max);
 use Data::Dumper;
 use Exporter 'import';
 
-our @EXPORT_OK = qw(render);
+our @EXPORT_OK = qw(render_matrix);
 
 my $nrows;
 my $ncols;
@@ -14,44 +14,43 @@ my @widths;
 
 my %shells = (
     header => {
-        left        => '/-',
-        right       => "-\\\n",
-        separator   => '---',
-        placeholder => '-',
+        left        => '/',
+        right       => "\\\n",
+        separator   => '-',
     },
 
     footer => {
-        left        => '\\-',
-        right       => "-/\n",
-        separator   => '---',
-        placeholder => '-',
+        left        => '\\',
+        right       => "/\n",
+        separator   => '-',
     },
 
     row_separator => {
-        left        => '|-',
-        right       => "-|\n",
-        separator   => '-+-',
-        placeholder => '-',
+        left        => '|',
+        right       => "|\n",
+        separator   => '+',
     },
 
     data_row => {
-        left        => '| ',
-        right       => " |\n",
-        separator   => ' | ',
+        left        => '|',
+        right       => "|\n",
+        separator   => '|',
     },
 
     cell => {
-        left        => sub {},
-        right       => sub {},
+        left        => ' ',
+        right       => ' ',
+        placeholder => ' ',
     },
+
+    border_cell => {
+        left        => '-',
+        right       => '-',
+        placeholder => '-',
+    },
+
 );
 
-$shells{table} = {
-    left        => build_line($shells{header}),
-    right       => build_line($shells{footer}),
-    separator   => build_line($shells{row_separator}),
-    subshell    => $shells{data_row},
-};
 
 sub pad {
     my ($row) = @_;
@@ -80,35 +79,37 @@ sub wrap {
 }
 
 sub build_block {
-    my $shell = shift;
-    my @data;
+    my $block = shift;
+    my $shell = $block->{shell};
+    my $data  = $block->{data};
+    my $l     = $block->{len};
+    
+    my $left  = ref $shell->{left}  ? build_block($shell->{left})  : $shell->{left};
+    my $right = ref $shell->{right} ? build_block($shell->{right}) : $shell->{right};
 
-    if (defined $shell->{placeholder}) {
-        @data = map { $shell->{placeholder}x$widths[$_] } 0..$ncols-1; 
+    my @print_data;
+
+    if (defined $shell->{separator}) {
+        my $separator = ref $shell->{separator} ? build_block($shell->{separator}) : $shell->{separator};
+        my @subblocks = map { build_block($_) } @$data;
+
+        local $" = $separator;
+        local $, = '';
+
+        return $left . "@subblocks" . $right;
     }
     else {
-        @data = pad(shift);
+        my $p = $shell->{placeholder};
+
+        my $padded_data = $p x ($l - length($data)) . $data;
+
+        return $left . "$padded_data" . $right;
     }
 
-	local $" = $shell->{separator};
-	local $, = '';
 
-    return $shell->{left} . "@data" . $shell->{right};
 }
 
-sub build_line {
-    my $shell = shift;
-    my $data  = shift;
-    my $line;
-
-    local *STDOUT;
-    open STDOUT, '>', \$line;
-    build_block($shell, $data);
-
-    return $line;
-}
-
-sub render {
+sub render_matrix {
     my ($matrix) = @_;
     $nrows = @{ $matrix };
     $ncols = @{ $matrix->[0] };
@@ -117,25 +118,39 @@ sub render {
         $widths[$i] = max( map { length $_->[$i] } @$matrix );
     }
 
-    my $row_separator = build_line($shells{row_separator});
+    my $super_matrix_data = [];
 
-    #    build_block($shells{table});
-    #
-    #    {
-    #        local $" = $row_separator;
-    #        local $, = '';
-    #
-    #        my @rows = map { build_line($shells{data_row}, $_) } @$matrix;
-    #
-    #        print "@rows";
-    #    }
-    #
-    #    build_block($shells{footer});
+    for my $i (0..$nrows-1) {
+        my $j = 0;
+        my @row 
+            = map { +{ shell => $shells{cell}, data => $_, len => $widths[$j++] } } @{ $matrix->[$i] };
 
+        push @$super_matrix_data, { shell => $shells{data_row}, data => \@row, len => 1 }; 
+    }
 
-    print join ' ', @widths , "\n";
-   
-    print $nrows, ' ', $ncols, "\n";
+    my $super_matrix_shell = {
+        left        => {
+            shell => $shells{header},
+            data  => [ map { +{shell => $shells{border_cell}, data=>"", len => $_ } } @widths ],
+        },
+        right       => {
+            shell => $shells{footer},
+            data  => [ map { +{shell => $shells{border_cell}, data=>"", len => $_ } } @widths ],
+        },
+        separator   => {
+            shell => $shells{row_separator},
+            data  => [ map { +{shell => $shells{border_cell}, data=>"", len => $_ } } @widths ],
+        },
+    };
+
+    my $super_matrix = {
+        shell => $super_matrix_shell,
+        data  => $super_matrix_data,
+    };
+
+    my $str = build_block($super_matrix);
+
+    print $str, "\n";
 }
 
 1;
