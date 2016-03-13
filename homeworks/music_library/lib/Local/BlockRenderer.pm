@@ -28,11 +28,12 @@ sub pad_cell_center {
 
 sub render_block {
     my $block  = shift;
+
+    return $block if !ref $block;
+
     my $shell  = $block->{shell};
     my $data   = $block->{data};
     my $widths = $block->{widths};
-
-    return $data if !defined $shell;
 
     my $len   = $block->{len};
     

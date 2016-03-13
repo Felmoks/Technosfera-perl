@@ -42,7 +42,7 @@ sub shell_row {
     my ($row_type, $cell_type, $widths) = @_;
     return {
         shell  => $shells{$row_type},
-        data   => [ map { +{ data=>"" } } @$widths ],
+        data   => [ map { "" } @$widths ],
         widths => $widths,
     };
 }
@@ -60,10 +60,7 @@ sub build_block {
     my $block_data = [];
 
     for my $i (0..$nrows-1) {
-        my @row 
-            = map { +{
-                data => $matrix->[$i][$_],
-            } } 0..$ncols-1;
+        my @row = map { $matrix->[$i][$_] } 0..$ncols-1;
 
         push @$block_data, {
             shell => $shells{data_row},
