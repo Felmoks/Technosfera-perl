@@ -1,4 +1,4 @@
-package Local::TableRenderer;
+package Local::BlockRenderer;
 
 use strict;
 use warnings;
@@ -50,8 +50,6 @@ sub render_block {
 
         return $left . "$padded_data" . $right;
     }
-
-
 }
 
 1;

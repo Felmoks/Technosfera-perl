@@ -4,8 +4,8 @@ use strict;
 use warnings;
 use Getopt::Long;
 use Local::MusicLibrary qw(read_library get_songs);
-use Local::TableRenderer qw(render_block);
-use Local::TableBuilder  qw(build_matrix);
+use Local::BlockBuilder  qw(build_block);
+use Local::BlockRenderer qw(render_block);
 use Data::Dumper;
 
 my %query;
@@ -26,7 +26,7 @@ my $songs = read_library();
 my $select = get_songs($songs, \%query);
 exit if @$select == 0;
 
-my $m = build_matrix($select);
+my $m = build_block($select);
 
 my $output = render_block($m);
 

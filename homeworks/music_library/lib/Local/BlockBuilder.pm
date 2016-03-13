@@ -1,4 +1,4 @@
-package Local::TableBuilder;
+package Local::BlockBuilder;
 
 use strict;
 use warnings;
@@ -6,7 +6,7 @@ use List::Util qw(max);
 use Data::Dumper;
 use Exporter 'import';
 
-our @EXPORT_OK = qw(build_matrix);
+our @EXPORT_OK = qw(build_block);
 
 my $nrows;
 my $ncols;
@@ -54,7 +54,7 @@ my %shells = (
 
 );
 
-sub build_matrix {
+sub build_block {
     my ($matrix) = @_;
     $nrows = @{ $matrix };
     $ncols = @{ $matrix->[0] };
@@ -63,16 +63,16 @@ sub build_matrix {
         $widths[$i] = max( map { length $_->[$i] } @$matrix );
     }
 
-    my $super_matrix_data = [];
+    my $block_data = [];
 
     for my $i (0..$nrows-1) {
         my @row 
             = map { +{ shell => $shells{cell}, data => $matrix->[$i][$_], len => $widths[$_] } } 0..$ncols-1;
 
-        push @$super_matrix_data, { shell => $shells{data_row}, data => \@row, len => 1 }; 
+        push @$block_data, { shell => $shells{data_row}, data => \@row, len => 1 }; 
     }
 
-    my $super_matrix_shell = {
+    my $block_shell = {
         left        => {
             shell => $shells{header},
             data  => [ map { +{shell => $shells{border_cell}, data=>"", len => $_ } } @widths ],
@@ -87,12 +87,12 @@ sub build_matrix {
         },
     };
 
-    my $super_matrix = {
-        shell => $super_matrix_shell,
-        data  => $super_matrix_data,
+    my $block = {
+        shell => $block_shell,
+        data  => $block_data,
     };
 
-    return $super_matrix;
+    return $block;
 }
 
 1;

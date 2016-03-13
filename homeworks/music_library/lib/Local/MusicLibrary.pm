@@ -5,7 +5,7 @@ use warnings;
 use Data::Dumper;
 use Exporter 'import';
 
-our @EXPORT_OK = qw(parse get_songs);
+our @EXPORT_OK = qw(read_library get_songs);
 
 =encoding utf8
 
@@ -97,12 +97,15 @@ sub get_songs {
     return \@selected;
 }
 
-sub parse {
+sub read_library {
     my @songs;
+
     while (my $line = <>) {
         chomp($line);
+
         my @data = split '/', $line;
         @data = ($data[1], split(' - ', $data[2]), split('\.', $data[3]));
+
         my %song = (
             band   => $data[0],
             year   => $data[1],
@@ -110,8 +113,10 @@ sub parse {
             track  => $data[3],
             format => $data[4],
         );
+
         push @songs, \%song;
     }
+
     return \@songs;
 }
 
