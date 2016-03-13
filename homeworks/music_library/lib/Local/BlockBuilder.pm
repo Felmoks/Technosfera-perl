@@ -10,45 +10,42 @@ our @EXPORT_OK = qw(build_block);
 
 my %shells = (
     header => {
-        left        => '/',
-        right       => "\\\n",
-        separator   => '-',
+        left        => '/-',
+        right       => "-\\\n",
+        separator   => '---',
+        placeholder => '-',
     },
 
     footer => {
-        left        => '\\',
-        right       => "/\n",
-        separator   => '-',
+        left        => '\\-',
+        right       => "-/\n",
+        separator   => '---',
+        placeholder => '-',
     },
 
     row_separator => {
-        left        => '|',
-        right       => "|\n",
-        separator   => '+',
+        left        => '|-',
+        right       => "-|\n",
+        separator   => '-+-',
+        placeholder => '-',
     },
 
     data_row => {
-        left        => '|',
-        right       => "|\n",
-        separator   => '|',
-        pad         => \&pad_row,
-    },
-
-    cell => {
-        left        => ' ',
-        right       => ' ',
+        left        => '| ',
+        right       => " |\n",
+        separator   => ' | ',
         placeholder => ' ',
-        pad         => \&pad_cell_center,
     },
-
-    border_cell => {
-        left        => '-',
-        right       => '-',
-        placeholder => '-',
-        pad         => \&pad_cell_center,
-    },
-
 );
+
+sub shell_row {
+    my ($row_type, $cell_type, $widths) = @_;
+    return {
+        shell  => $shells{$row_type},
+        data   => [ map { +{ data=>"" } } @$widths ],
+        widths => $widths,
+    };
+}
 
 sub build_block {
     my ($matrix) = @_;
@@ -64,29 +61,28 @@ sub build_block {
 
     for my $i (0..$nrows-1) {
         my @row 
-            = map { +{ shell => $shells{cell}, data => $matrix->[$i][$_], len => $widths[$_] } } 0..$ncols-1;
+            = map { +{
+                data => $matrix->[$i][$_],
+            } } 0..$ncols-1;
 
-        push @$block_data, { shell => $shells{data_row}, data => \@row, len => 1 }; 
+        push @$block_data, {
+            shell => $shells{data_row},
+            data => \@row,
+            widths => \@widths,
+        }; 
     }
 
     my $block_shell = {
-        left        => {
-            shell => $shells{header},
-            data  => [ map { +{shell => $shells{border_cell}, data=>"", len => $_ } } @widths ],
-        },
-        right       => {
-            shell => $shells{footer},
-            data  => [ map { +{shell => $shells{border_cell}, data=>"", len => $_ } } @widths ],
-        },
-        separator   => {
-            shell => $shells{row_separator},
-            data  => [ map { +{shell => $shells{border_cell}, data=>"", len => $_ } } @widths ],
-        },
+        left        => shell_row('header', 'border_cell', \@widths),
+        right       => shell_row('footer', 'border_cell', \@widths),
+        separator   => shell_row('row_separator', 'border_cell', \@widths),
+        placeholder => shell_row('data_row', 'cell', \@widths),
     };
 
     my $block = {
-        shell => $block_shell,
-        data  => $block_data,
+        shell  => $block_shell,
+        data   => $block_data,
+        widths => [ (1)x$nrows ],
     };
 
     return $block;

@@ -26,8 +26,8 @@ my $songs = read_library();
 my $select = get_songs($songs, \%query);
 exit if @$select == 0;
 
-my $m = build_block($select);
+my $block = build_block($select);
 
-my $output = render_block($m);
+my $output = render_block($block);
 
 print $output;
