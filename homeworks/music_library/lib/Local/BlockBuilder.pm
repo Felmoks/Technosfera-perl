@@ -8,10 +8,6 @@ use Exporter 'import';
 
 our @EXPORT_OK = qw(build_block);
 
-my $nrows;
-my $ncols;
-my @widths;
-
 my %shells = (
     header => {
         left        => '/',
@@ -56,8 +52,9 @@ my %shells = (
 
 sub build_block {
     my ($matrix) = @_;
-    $nrows = @{ $matrix };
-    $ncols = @{ $matrix->[0] };
+    my $nrows = @{ $matrix };
+    my $ncols = @{ $matrix->[0] };
+    my @widths;
 
     for my $i (0..$ncols-1) {
         $widths[$i] = max( map { length $_->[$i] } @$matrix );
