@@ -28,6 +28,7 @@ exit if @$select == 0;
 
 my $block = build_block($select);
 
+
 my $output = render_block($block);
 
 print $output;
