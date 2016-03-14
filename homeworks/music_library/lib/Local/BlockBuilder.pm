@@ -59,10 +59,15 @@ sub pad_center {
 
 
 my $strlen = sub { length($_[0]) };
-my $pad_cell_left  = sub { pad_left($_[0], $_[1], $_[2], $strlen) };
-
 my $rowlen = sub { ($_[0] =~ tr/\n//) };
-my $pad_row_center = sub { pad_center($_[0], $_[1], $_[2], $rowlen) };
+
+sub pad_cell_left { 
+    pad_left($_[0], $_[1], $_[2], $strlen)
+};
+
+sub pad_row_center {
+    pad_center($_[0], $_[1], $_[2], $rowlen)
+};
 
 
 sub shell_row {
@@ -71,7 +76,7 @@ sub shell_row {
         shell  => $shells{$row_type},
         data   => [ map { "" } @$widths ],
         widths => $widths,
-        pad    => $pad_cell_left,
+        pad    => \&pad_cell_left,
     };
 }
 
@@ -94,7 +99,7 @@ sub build_block {
             shell  => $shells{data_row},
             data   => \@row,
             widths => \@widths,
-            pad    => $pad_cell_left,
+            pad    => \&pad_cell_left,
         }; 
     }
 
@@ -109,7 +114,7 @@ sub build_block {
         shell  => $block_shell,
         data   => $block_data,
         widths => [ (1)x$nrows ],
-        pad    => $pad_row_center,
+        pad    => \&pad_row_center,
     };
 
     return $block;

@@ -25,11 +25,9 @@ sub render_block {
 
     my @subblocks = map { render_block($_) } @$data;
 
-    @subblocks = map { $pad->($placeholder, $widths->[$_], $subblocks[$_]) } 0..@subblocks-1;
+    @subblocks = map { $pad->($placeholder, $widths->[$_], $subblocks[$_]) } 0..$#subblocks;
 
-    local $" = $separator;
-
-    return $left . "@subblocks" . $right;
+    return $left . join($separator, @subblocks) . $right;
 }
 
 1;
