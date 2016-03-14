@@ -3,7 +3,7 @@ package Local::MusicLibrary;
 use strict;
 use warnings;
 use Data::Dumper;
-use Local::MusicLibrary::Helpers qw(process_query filter_library sort_library extract_columns);
+use Local::MusicLibrary::Helpers qw(filter_library sort_library extract_columns);
 use Exporter 'import';
 
 our @EXPORT_OK = qw(read_library get_songs);
@@ -27,10 +27,9 @@ our $VERSION = '1.00';
 =cut
 
 sub get_songs {
-    my ($songs, $query) = @_;
+    my ($library, $query) = @_;
 
-    my $selected = filter_library($songs, $query->{filter});
-    return [] if @$selected == 0;
+    my $selected = filter_library($library, $query->{filter});
 
     $selected = sort_library($selected, $query->{sort});
 
