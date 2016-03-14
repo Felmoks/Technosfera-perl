@@ -103,7 +103,7 @@ sub read_library {
     while (my $line = <>) {
         chomp($line);
 
-        my @data = split |/|, $line;
+        my @data = split m{/}, $line;
 
         my %song;
         @song{qw(band year album track format)}
