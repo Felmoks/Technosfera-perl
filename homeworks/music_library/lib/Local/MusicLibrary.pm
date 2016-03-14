@@ -78,7 +78,7 @@ sub get_songs {
 
     #Sort
     if (defined $sort) {
-        my @sort_fields = split ',', $sort;
+        my @sort_fields = split /,/, $sort;
         my $comparator = sub {
             for my $key (@sort_fields) {
                 my $order = $fields{$key}{compare}($a->{$key}, $b->{$key});
@@ -91,7 +91,7 @@ sub get_songs {
     #Extract columns
     $columns = $columns // 'band,year,album,track,format';
     return [] if $columns eq '';
-    my @keys = split ',', $columns;
+    my @keys = split /,/, $columns;
     @selected = map { [ @$_{@keys} ] } @selected;
 
     return \@selected;
@@ -103,11 +103,11 @@ sub read_library {
     while (my $line = <>) {
         chomp($line);
 
-        my @data = split '/', $line;
+        my @data = split |/|, $line;
 
         my %song;
         @song{qw(band year album track format)}
-            = ($data[1], split(' - ', $data[2]), split('\.', $data[3]));
+            = ($data[1], split(/ - /, $data[2]), split(/\./, $data[3]));
 
         push @songs, \%song;
     }
