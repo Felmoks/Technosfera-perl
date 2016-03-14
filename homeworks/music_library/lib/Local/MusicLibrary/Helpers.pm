@@ -47,6 +47,7 @@ my %default_query = (
 
 sub filter_library {
     my ($library, $query) = @_;
+    return [] if @$library == 0;
     return [ @$library ] if (keys %$query) == 0;
 
     my $is_valid = sub {
@@ -66,6 +67,7 @@ sub filter_library {
 
 sub sort_library {
     my ($library, $sort_fields) = @_;
+    return [] if @$library == 0;
     return [ @$library ] if @$sort_fields == 0;
 
     my $comparator = sub {
@@ -82,7 +84,7 @@ sub sort_library {
 
 sub extract_columns {
     my ($library, $columns) = @_;
-    return [] if @$columns == 0;
+    return [] if @$columns == 0 || @$library == 0;
 
     my @data = map { [ @$_{@$columns} ] } @$library;
     return \@data;
