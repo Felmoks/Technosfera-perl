@@ -1,4 +1,4 @@
-package Local::BlockRenderer;
+package Local::MusicLibrary::BlockRenderer;
 
 use strict;
 use warnings;

@@ -1,4 +1,4 @@
-package Local::BlockBuilder;
+package Local::MusicLibrary::BlockBuilder;
 
 use strict;
 use warnings;

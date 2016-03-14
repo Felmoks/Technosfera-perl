@@ -4,8 +4,8 @@ use strict;
 use warnings;
 use Getopt::Long;
 use Local::MusicLibrary qw(read_library get_songs);
-use Local::BlockBuilder  qw(build_block);
-use Local::BlockRenderer qw(render_block);
+use Local::MusicLibrary::BlockBuilder  qw(build_block);
+use Local::MusicLibrary::BlockRenderer qw(render_block);
 use Data::Dumper;
 
 my %query;
