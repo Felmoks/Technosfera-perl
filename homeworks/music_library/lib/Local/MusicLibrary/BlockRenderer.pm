@@ -14,6 +14,8 @@ sub render_block {
     return $block if !ref $block;
 
     my $shell  = $block->{shell};
+    return '' if !defined $shell;
+
     my $data   = $block->{data};
     my $widths = $block->{widths};
     my $pad    = $block->{pad};

@@ -82,7 +82,10 @@ sub shell_row {
 
 sub build_block {
     my ($matrix) = @_;
+
     my $nrows = @{ $matrix };
+    return {} if $nrows == 0;
+
     my $ncols = @{ $matrix->[0] };
     my @widths;
 

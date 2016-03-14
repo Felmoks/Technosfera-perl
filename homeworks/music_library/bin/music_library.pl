@@ -6,12 +6,13 @@ use Getopt::Long;
 use Local::MusicLibrary qw(read_library get_songs);
 use Local::MusicLibrary::BlockBuilder  qw(build_block);
 use Local::MusicLibrary::BlockRenderer qw(render_block);
+use Local::MusicLibrary::Helpers qw(process_query);
 use Data::Dumper;
 
-my %query;
+my %raw_query;
 
 GetOptions(
-    \%query,
+    \%raw_query,
         'band=s'   , 
         'year=s'   , 
         'album=s'  , 
@@ -23,11 +24,11 @@ GetOptions(
 
 my $songs = read_library();
 
-my $select = get_songs($songs, \%query);
-exit if @$select == 0;
+my $query = process_query(\%raw_query);
+
+my $select = get_songs($songs, $query);
 
 my $block = build_block($select);
-
 
 my $output = render_block($block);
 
