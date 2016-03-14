@@ -104,15 +104,10 @@ sub read_library {
         chomp($line);
 
         my @data = split '/', $line;
-        @data = ($data[1], split(' - ', $data[2]), split('\.', $data[3]));
 
-        my %song = (
-            band   => $data[0],
-            year   => $data[1],
-            album  => $data[2],
-            track  => $data[3],
-            format => $data[4],
-        );
+        my %song;
+        @song{qw(band year album track format)}
+            = ($data[1], split(' - ', $data[2]), split('\.', $data[3]));
 
         push @songs, \%song;
     }
