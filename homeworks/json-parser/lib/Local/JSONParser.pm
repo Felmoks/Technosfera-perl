@@ -33,15 +33,12 @@ our $VERSION = '1.00';
 =cut
 
 sub parse_json {
-	my $source = shift;
-	
-    #use JSON::XS;
-	# return JSON::XS->new->utf8->decode($source);
+    my $source = shift;
 
     my $tokens = tokenize($source);
     my $result = parse($tokens);
 
-	return $result; 
+    return $result; 
 }
 
 1;
