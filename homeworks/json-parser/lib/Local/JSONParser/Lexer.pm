@@ -2,10 +2,8 @@ package Local::JSONParser::Lexer;
 
 use strict;
 use warnings;
-use 5.010;
-use Data::Dumper;
 use base qw(Exporter);
-our @EXPORT_OK = qw(tokenize);
+our @EXPORT_OK = qw(tokenize token_type token_data);
 
 my %tokens = (
     'WHITESPACE'    => qr/\s+/,
@@ -15,31 +13,43 @@ my %tokens = (
     'BRACKET_RIGHT' => qr/\]/,
     'COLON'         => qr/:/,
     'COMMA'         => qr/,/,
-    'TRUE'          => qr/true/,
-    'FALSE'         => qr/false/,
-    'NULL'          => qr/null/,
     'STRING'        => qr/"(?:\\.|[^\"])*+"/,
     'NUMBER'        => qr/[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?/,
 );
+
+sub token_type {
+    return $_[0]->{type};
+}
+
+sub token_data {
+    return $_[0]->{data};
+}
 
 sub tokenize {
     my ($text) = @_;
     my @tokens;
 
-    print Dumper $text;
-
     $text =~ m//g;
 
     POSITION:
     while (pos($text) < length($text)) {
-        keys %tokens;
         while (my ($token, $pattern) = each %tokens) {
-            if ($text =~ /\G$pattern/gc) {
-               push @tokens, $token if !($token eq 'WHITESPACE'); 
-               next POSITION;
+            if ($text =~ /\G(?<data>$pattern)/gc) {
+                my $data = $+{data};
+                if ($token eq 'STRING') {
+                    $data =~ s/\\u(\d{1,4})/\\x{$1}/g; 
+                    $data = eval qq{$data};
+                }
+                elsif ($token eq 'NUMBER') {
+                    $data = 0+ $data;
+                }
+                push @tokens, { type => $token, data => $data } if $token ne 'WHITESPACE'; 
+                next POSITION;
             }
         }
-        die("Unexpected token at position:\n " . substr($text, pos($text)));
+        die("Unexpected token here: " . substr($text, pos($text)));
+    } continue {
+        keys %tokens;
     }
 
     return \@tokens;
