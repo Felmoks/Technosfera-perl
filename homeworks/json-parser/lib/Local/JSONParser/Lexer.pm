@@ -37,8 +37,13 @@ sub tokenize {
             if ($text =~ /\G(?<data>$pattern)/gc) {
                 my $data = $+{data};
                 if ($token eq 'STRING') {
-                    $data =~ s/\\u(\d{1,4})/\\x{$1}/g; 
-                    $data = eval qq{$data};
+                    for ($data) {
+                        s/^"|"$//g; 
+                        s/\\u(\d{1,4})/chr(hex($1))/ge; 
+                        s/\\t/\t/g; 
+                        s/\\n/\n/g; 
+                        s/\\(.)/$1/g; 
+                    }
                 }
                 elsif ($token eq 'NUMBER') {
                     $data = 0+ $data;
