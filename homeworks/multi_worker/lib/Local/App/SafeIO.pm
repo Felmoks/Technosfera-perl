@@ -4,9 +4,12 @@ use strict;
 use warnings;
 
 use Exporter 'import';
-our @EXPORT_OK = qw(safe_open safe_close);
-
 use Fcntl ':flock';
+
+our @EXPORT_OK = qw(safe_open safe_close LOCK_EX LOCK_SH LOCK_UN LOCK_NB);
+our %EXPORT_TAGS = (
+    safeio => [qw(safe_open safe_close LOCK_EX LOCK_SH LOCK_UN LOCK_NB)],
+);
 
 sub safe_open {
     my ($fh, $mode, $name, $operation) = @_;

@@ -4,8 +4,7 @@ use strict;
 use warnings;
 use Test::More tests => 15;
 
-use Local::App::SafeIO qw(safe_open safe_close);
-use Fcntl ':flock';
+use Local::App::SafeIO qw(:safeio);
 
 my ($fh, $fh1, $fh2);
 
