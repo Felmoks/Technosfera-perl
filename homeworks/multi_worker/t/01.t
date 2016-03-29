@@ -46,7 +46,7 @@ my $cnt_worker = 0;
 my $min;
 my $max;
 for (keys %$struct) {
-    $status .= $_." ".$struct->{$_}->{status}.$/ if $struct->{$_}->{status} ne 'done'; 
+    $status .= $_." ".$struct->{$_}->{status}.$/ if $struct->{$_}->{status} ne 'DONE'; 
     $sum += $struct->{$_}->{cnt};
     $cnt_worker++;
     $min = $max = $struct->{$_}->{cnt} unless defined $min;
