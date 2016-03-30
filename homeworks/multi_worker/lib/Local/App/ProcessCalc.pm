@@ -10,34 +10,35 @@ use POSIX qw(:sys_wait_h);
 use Fcntl qw(:seek);
 
 our $VERSION = '1.0';
-
 our $status_file = './calc_status.txt';
-
-my $results_file = './results.txt';
 
 sub update_status {
     my ($type, $value) = @_;
 
-    my $status;
-
-    safe_open($status, '+<', $status_file, LOCK_EX);
-    my $workers = JSON::XS::decode_json(<$status>); 
+    my $status_fh;
+    my $workers;
+    if (-e $status_file) {
+        safe_open($status_fh, '+<', $status_file, LOCK_EX);
+        $workers = JSON::XS::decode_json(<$status_fh>); 
+    }
+    else {
+        safe_open($status_fh, '+>', $status_file, LOCK_EX);
+        $workers = {}; 
+    }
     if ($type eq 'cnt') {
         $workers->{$$}{cnt} += 1;
     }
     else {
         $workers->{$$}{status} = $value;
     }
-    seek($status, 0, SEEK_SET) or die("Cannot seek: $!");
-    print $status JSON::XS::encode_json($workers);
-    truncate($status, tell($status)) or die("Cannot truncate: $!");
-    safe_close($status);
+    seek($status_fh, 0, SEEK_SET) or die("Cannot seek: $!");
+    print $status_fh JSON::XS::encode_json($workers);
+    truncate($status_fh, tell($status_fh)) or die("Cannot truncate: $!");
+    safe_close($status_fh);
 }
 
-sub multi_calc {
-    my $fork_cnt = shift;
-    my $jobs = shift;   
-    my $calc_port = shift;
+sub split_jobs {
+    my ($jobs, $fork_cnt) = @_;
 
     my $even = int(@$jobs / $fork_cnt);
     my $rest = @$jobs - $even * $fork_cnt;
@@ -48,21 +49,60 @@ sub multi_calc {
     my @in_jobs = @$jobs;
     my @jobs;
     push @jobs, [splice(@in_jobs, 0, $job_counts[$_])] for (0..$fork_cnt-1);
+
+    return \@jobs;
+}
+
+sub put_results {
+    my ($results) = @_;
+
+    open(my $results_fh, '>', "results_$$.txt");
+    print $results_fh "$_\n" for (@$results);
+    close($results_fh);
+}
+
+sub get_results {
+    my ($workers, $results) = @_;
+    
+    while (my $pid = waitpid(-1, WNOHANG)) {
+        last if $pid == -1;
+        if (WIFEXITED($?)) {
+            my $results_file = delete $workers->{$pid};
+            open(my $worker_results, '<', $results_file);
+            push @$results, $_ while (<$worker_results>);
+            close($worker_results);
+            unlink "results_$pid.txt";
+        }
+        elsif (WIFSIGNALED($?)) {
+            my $sig = $? - 128;
+            print "CAUGHT $sig\n";
+        }
+    }
+}
+
+sub multi_calc {
+    my $fork_cnt = shift;
+    my $jobs = shift;   
+    my $calc_port = shift;
+
+    my $splitted_jobs = split_jobs($jobs, $fork_cnt);
+
     my $workers = {};
+    my $ret = [];
 
-    safe_open(my $status, '>', $status_file, LOCK_EX);
+    $SIG{CHLD} = sub {
+        get_results($workers, $ret);
+    };
 
-    for my $job (@jobs) {
+    for my $job (@$splitted_jobs) {
         my $pid = fork();
         if ($pid > 0) {
-            $workers->{ $pid } = {
-                status => 'READY',
-                count  => 0,
-            };
+            $workers->{ $pid } = "results_$pid.txt";
             next;
         }
         die("Cannot fork: $!") if !defined($pid);
-        close($status);
+
+        update_status('status', 'READY');
 
         my $socket = Local::App::Calc::connect($calc_port);
 
@@ -77,34 +117,18 @@ sub multi_calc {
 
         Local::App::Calc::disconnect($socket);
 
-        my $results_fh;
-        safe_open($results_fh, '>>', $results_file, LOCK_EX);
-        print $results_fh "$_\n" for (@results);
-        safe_close($results_fh);
+        put_results(\@results);
 
         update_status('status', 'DONE');
 
         exit;
     }
-    
-    print $status JSON::XS::encode_json($workers);
-    safe_close($status);
 
     while (keys %$workers) {
-        my $pid = waitpid(-1, 0);
-        delete $workers->{ $pid };
     }
 
-    my @ret = ();
 
-    my $results_fh;
-    safe_open($results_fh, '<', $results_file, LOCK_SH);
-    push @ret, "$_" while (<$results_fh>);
-    safe_close($results_fh);
-
-    unlink($results_file);
-
-    return \@ret;
+    return $ret;
 }
 
 
