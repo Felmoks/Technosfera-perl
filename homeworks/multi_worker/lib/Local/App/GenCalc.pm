@@ -18,7 +18,7 @@ sub new_one {
                   '('.int(rand(10)).' + '.int(rand(8)).') * '.int(rand(7)), 
                   int(rand(5)).' + '.int(rand(6)).' * '.int(rand(8)).' ^ '.int(rand(12)), 
                   int(rand(20)).' + '.int(rand(40)).' * '.int(rand(45)).' ^ '.int(rand(12)), 
-#                  (int(rand(12))/(int(rand(17))+1)).' * ('.(int(rand(14))/(int(rand(30))+1)).' - '.int(rand(10)).') / '.rand(10).'.0 ^ 0.'.int(rand(6)),  
+                  (int(rand(12))/(int(rand(17))+1)).' * ('.(int(rand(14))/(int(rand(30))+1)).' - '.int(rand(10)).') / '.rand(10).'.0 ^ 0.'.int(rand(6)),  
                   int(rand(8)).' + 0.'.int(rand(10)), 
                   int(rand(10)).' + .5',
                   int(rand(10)).' + .5e0',

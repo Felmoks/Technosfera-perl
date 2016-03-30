@@ -89,9 +89,14 @@ sub submit {
 sub calculate {
     my $ex = shift;
     # На вход получаем пример, который надо обработать, на выход возвращаем результат
+    
+    my $result;
 
-    my $rpn    = rpn($ex);
-    my $result = evaluate($rpn);
+    eval {
+        $result = evaluate(rpn($ex));
+    } or do {
+        $result = 'ERROR';
+    };
 
     return $result;
 }
