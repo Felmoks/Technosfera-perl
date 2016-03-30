@@ -19,14 +19,21 @@ sub update_status {
     my ($type, $value) = @_;
 
     my $status;
-
-    safe_open($status, '+<', $status_file, LOCK_EX);
-    my $workers = JSON::XS::decode_json(<$status>); 
+    my $workers;
+    if (-e $status_file) {
+        safe_open($status, '+<', $status_file, LOCK_EX);
+        $workers = JSON::XS::decode_json(<$status>); 
+    }
+    else {
+        safe_open($status, '+>', $status_file, LOCK_EX);
+        $workers = {};
+    }
     if ($type eq 'cnt') {
         $workers->{$$}{cnt} += 1;
     }
     else {
         $workers->{$$}{status} = $value;
+        $workers->{$$}{cnt} = 0 if $value eq 'READY';
     }
     seek($status, 0, SEEK_SET) or die("Cannot seek: $!");
     print $status JSON::XS::encode_json($workers);
@@ -48,21 +55,17 @@ sub multi_calc {
     my @in_jobs = @$jobs;
     my @jobs;
     push @jobs, [splice(@in_jobs, 0, $job_counts[$_])] for (0..$fork_cnt-1);
-    my $workers = {};
-
-    safe_open(my $status, '>', $status_file, LOCK_EX);
+    my @workers = ();
 
     for my $job (@jobs) {
         my $pid = fork();
         if ($pid > 0) {
-            $workers->{ $pid } = {
-                status => 'READY',
-                count  => 0,
-            };
+            push @workers, $pid;
             next;
         }
         die("Cannot fork: $!") if !defined($pid);
-        close($status);
+
+        update_status('status', 'READY');
 
         my $socket = Local::App::Calc::connect($calc_port);
 
@@ -86,13 +89,10 @@ sub multi_calc {
 
         exit;
     }
-    
-    print $status JSON::XS::encode_json($workers);
-    safe_close($status);
 
-    while (keys %$workers) {
+    while (@workers) {
         my $pid = waitpid(-1, 0);
-        delete $workers->{ $pid };
+        @workers = grep { $pid ne $_ } @workers;
     }
 
     my @ret = ();
