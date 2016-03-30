@@ -51,12 +51,6 @@ sub start_server {
 
     $SIG{INT} = sub {
         print "GenCalc got SIGINT.Shutting down...\n";
-        unlink($file_path);
-        exit;
-    };
-
-    $SIG{TERM} = sub {
-        unlink($file_path);
         exit;
     };
 
@@ -83,7 +77,6 @@ sub start_server {
         alarm(0.1);
     }
 
-    unlink($file_path);
 }
 
 sub request_batch {
@@ -155,6 +148,10 @@ sub get {
 
     safe_close($fh);
     return \@ret;
+}
+
+END {
+    unlink $file_path;
 }
 
 1;

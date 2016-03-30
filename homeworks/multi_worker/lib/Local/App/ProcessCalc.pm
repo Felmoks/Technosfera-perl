@@ -17,6 +17,7 @@ sub update_status {
 
     my $status_fh;
     my $workers;
+
     if (-e $status_file) {
         safe_open($status_fh, '+<', $status_file, LOCK_EX);
         $workers = JSON::XS::decode_json(<$status_fh>); 
@@ -25,15 +26,18 @@ sub update_status {
         safe_open($status_fh, '+>', $status_file, LOCK_EX);
         $workers = {}; 
     }
+
     if ($type eq 'cnt') {
         $workers->{$$}{cnt} += 1;
     }
     else {
         $workers->{$$}{status} = $value;
     }
+
     seek($status_fh, 0, SEEK_SET) or die("Cannot seek: $!");
     print $status_fh JSON::XS::encode_json($workers);
     truncate($status_fh, tell($status_fh)) or die("Cannot truncate: $!");
+
     safe_close($status_fh);
 }
 
@@ -53,7 +57,7 @@ sub split_jobs {
     return \@jobs;
 }
 
-sub put_results {
+sub dump_results {
     my ($results) = @_;
 
     open(my $results_fh, '>', "results_$$.txt");
@@ -61,7 +65,7 @@ sub put_results {
     close($results_fh);
 }
 
-sub get_results {
+sub collect_results {
     my ($workers, $results) = @_;
     
     while (my $pid = waitpid(-1, WNOHANG)) {
@@ -74,7 +78,7 @@ sub get_results {
             unlink "results_$pid.txt";
         }
         elsif (WIFSIGNALED($?)) {
-            my $sig = $? - 128;
+            my $sig = WTERMSIG($?);
             print "CAUGHT $sig\n";
         }
     }
@@ -90,8 +94,11 @@ sub multi_calc {
     my $workers = {};
     my $ret = [];
 
-    $SIG{CHLD} = sub {
-        get_results($workers, $ret);
+    $SIG{CHLD} = sub { collect_results($workers, $ret) };
+
+    $SIG{INT} = sub {
+        print "ProcessCalc got SIGINT.Shutting down...\n";
+        exit;
     };
 
     for my $job (@$splitted_jobs) {
@@ -117,7 +124,7 @@ sub multi_calc {
 
         Local::App::Calc::disconnect($socket);
 
-        put_results(\@results);
+        dump_results(\@results);
 
         update_status('status', 'DONE');
 
@@ -125,6 +132,7 @@ sub multi_calc {
     }
 
     while (keys %$workers) {
+        #Doing something while workers are active
     }
 
 
@@ -137,6 +145,12 @@ sub get_from_server {
     my $limit = shift;
 
     return Local::App::GenCalc::request_batch($port, $limit);
+}
+
+my $master_pid = $$;
+
+END {
+    unlink $status_file if $$ eq $master_pid;
 }
 
 1;

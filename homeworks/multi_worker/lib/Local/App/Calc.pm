@@ -94,6 +94,7 @@ sub calculate {
 
     eval {
         $result = evaluate(rpn($ex));
+        1;
     } or do {
         $result = 'ERROR';
     };
