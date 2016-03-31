@@ -108,7 +108,7 @@ print $obj->{b}; # 2
 
   sub get_a {
     my ($self) = @_;
-    
+
     return $self->{a};
   }
 }
@@ -230,6 +230,23 @@ use Some::Package 10.01
 
 ---
 
+# Итого
+
+```perl
+my $obj = Class->new();
+
+$obj->do_something();
+print $obj->{attr};
+```
+
+```perl
+$obj->can('method');
+$fh->print(123);
+$obj = new Class(); # :(
+```
+
+---
+
 # Содержание
 
 1. Введение
@@ -298,6 +315,7 @@ JSON->new->utf8->decode('...');
 
 decode_json '...';
 ```
+
 ---
 
 # Содержание
@@ -322,7 +340,7 @@ decode_json '...';
   BEGIN { push(@ISA, 'Dog', 'Cat') }
   use base qw(Dog Cat);
   use parent qw(Dog Cat);
-}  
+}
 
 ```
 
@@ -345,10 +363,10 @@ $obj->VERSION(5.12);
 # SUPER
 
 ```perl
-sub method {
+sub foo {
   my ($self, %params) = @_;
 
-  $self->SUPER::method(%params);
+  $self->SUPER::foo(%params);
 
   return;
 }
@@ -369,7 +387,7 @@ sub method {
 
 ---
 
-# Method Resolution Order 
+# Method Resolution Order
 
 ```
        Animal
@@ -460,43 +478,17 @@ blessed 0;           # undef
 
 ---
 
-# AUTOLOAD
-
-```perl
-package A;   
-our $AUTOLOAD;
-sub new {
-  my ($class, %params) = @_;
-  return bless \%params, $class;
-}
-sub AUTOLOAD { print $AUTOLOAD }
-```
-
-```perl
-A->new()->test(); # test
-A->can('anything'); # :(
-```
-
-```perl
-sub UNIVERSAL::AUTOLOAD {}
-
-# Dog->m(); Animal->m(); UNIVERSAL->m();
-# Dog->AUTOLOAD(); Animal->AUTOLOAD();
-# UNIVERSAL->AUTOLOAD();
-```
-
----
-
 # DESTROY
 
 ```perl
-package A;   
+package A;
 sub new {
   my ($class, %params) = @_;
   return bless \%params, $class;
 }
 
 sub DESTROY {
+  my ($self) = @_;
   print 'D';
 }
 ```
@@ -523,6 +515,154 @@ sub DESTROY {
 
 ---
 
+# AUTOLOAD
+
+```perl
+package A;
+our $AUTOLOAD;
+sub new {
+  my ($class, %params) = @_;
+  return bless \%params, $class;
+}
+sub AUTOLOAD { print $AUTOLOAD }
+```
+
+```perl
+A->new()->test(); # test
+A->can('anything'); # :(
+```
+
+```perl
+sub UNIVERSAL::AUTOLOAD {}
+
+# Dog->m(); Animal->m(); UNIVERSAL->m();
+# Dog->AUTOLOAD(); Animal->AUTOLOAD();
+# UNIVERSAL->AUTOLOAD();
+```
+
+---
+
+# Исключения
+
+```perl
+eval {
+  die Local::Exception->new();
+  1;
+} or do {
+  my $error = $@;
+
+  if (
+    blessed($error) &&
+    $error->isa('Local::Exception')
+  ) {
+     # ...
+  }
+  else {
+    die $error;
+  }
+};
+```
+
+---
+
+# Исключения — модули
+
+```perl
+use Try::Tiny;
+try {
+  die 'foo';
+}
+catch {
+  warn "caught error: $_"; # not $@
+};
+```
+
+```perl
+use Error qw(:try);
+try {
+  throw Error::Simple 'Oops!';
+}
+catch Error::Simple with { say 'Simple' }
+catch Error::IO with     { say 'IO' }
+except                   { say 'Except' }
+otherwise                { say 'Otherwise' }
+finally                  { say 'Finally' };
+```
+
+---
+
+# ???
+
+```perl
+$hash{x} = 7;
+
+print $hash{x};
+```
+
+---
+
+class:middle, center
+
+# 42
+
+---
+
+# tie
+
+```perl
+package Local::MyHash;
+
+use Tie::Hash;
+use base 'Tie::StdHash';
+
+sub FETCH { 42 }
+```
+
+```perl
+my %hash;
+tie %hash, 'Local::MyHash';
+
+$hash{x} = 7;
+
+print $hash{x};
+```
+
+---
+
+# overload
+
+```perl
+my $x = Local::Int->new(42);
+my $y = Local::Int->new(24);
+
+print(($x + $y)->{value}); # 66
+```
+
+---
+
+# overload
+
+```perl
+package Local::Int;
+
+use overload '+' => 'add';
+
+sub new {
+    my ($class, $value) = @_;
+    return bless {value => $value}, $class;
+}
+
+sub add {
+    my ($self, $other) = @_;
+
+    return __PACKAGE__->new(
+        $self->{value} + $other->{value}
+    );
+}
+```
+
+---
+
 # Class::Accessor
 
 ```perl
@@ -536,6 +676,21 @@ Foo->mk_accessors(qw(name role salary));
 use base qw(Class::Accessor::Fast);
 use base qw(Class::XSAccessor);
 ```
+---
+
+# Итого
+
+```perl
+ref($obj);
+blessed($obj);
+
+{ A->new() }
+```
+
+* `try`
+* `tie`
+* `overload`
+* `AUTOLOAD`
 
 ---
 
@@ -600,14 +755,14 @@ has password => (
 ### BUILD
 
 ```perl
-has age      => (is => 'ro', isa => 'Int'); 
-has is_adult => (is => 'ro', isa => 'Bool');
+has age      => (is => 'ro', isa => 'Int');
+has is_adult => (is => 'rw', isa => 'Bool');
 
 sub BUILD {
   my ($self) = @_;
-  
+
   $self->is_adult($self->age >= 18);
-  
+
   return;
 }
 ```
@@ -618,7 +773,7 @@ sub BUILD {
 ### default
 
 ```perl
-has age      => (is => 'ro', isa => 'Int'); 
+has age      => (is => 'ro', isa => 'Int');
 has is_adult => (
   is => 'ro',
   isa => 'Bool',
@@ -636,7 +791,7 @@ has is_adult => (
 ### builder
 
 ```perl
-has age      => (is => 'ro', isa => 'Int'); 
+has age      => (is => 'ro', isa => 'Int');
 has is_adult => (
   is => 'ro', isa => 'Bool',
   lazy => 1,  builder => '_build_is_adult',
@@ -695,9 +850,9 @@ has password => (
   isa => 'Str',
 );
 
-sub password_digest { 
+sub password_digest {
   my ($self) = @_;
- 
+
   return Some::Digest->new($self->password);
 }
 ```
@@ -780,7 +935,7 @@ has 'cache_dir' => ( ... );
 
 ---
 
-# ДЗ 5
+# ДЗ 6
 
 https://github.com/Nikolo/Technosfera-perl/
 
