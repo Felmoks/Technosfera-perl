@@ -18,5 +18,21 @@ Local::Interval - time interval
 
 =cut
 
+sub new {
+    my ($class, %args) = @_;
+
+    return bless +{ %args }, $class;
+}
+
+sub from {
+    my ($self) = @_;
+    return $self->{from}; 
+}
+
+sub to {
+    my ($self) = @_;
+    return $self->{to};
+}
+
 1;
 
