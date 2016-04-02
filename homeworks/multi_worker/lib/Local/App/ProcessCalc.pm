@@ -18,14 +18,8 @@ sub update_status {
     my $status_fh;
     my $workers;
 
-    if (-e $status_file) {
-        safe_open($status_fh, '+<', $status_file, LOCK_EX);
-        $workers = JSON::XS::decode_json(<$status_fh>); 
-    }
-    else {
-        safe_open($status_fh, '+>', $status_file, LOCK_EX);
-        $workers = {}; 
-    }
+    safe_open($status_fh, '+<', $status_file, LOCK_EX);
+    $workers = JSON::XS::decode_json(<$status_fh>);
 
     if ($type eq 'cnt') {
         $workers->{$$}{cnt} += 1;
@@ -94,12 +88,19 @@ sub multi_calc {
     my $workers = {};
     my $ret = [];
 
-    $SIG{CHLD} = sub { collect_results($workers, $ret) };
+    $SIG{CHLD} = sub {
+        collect_results($workers, $ret)
+    };
 
     $SIG{INT} = sub {
         print "ProcessCalc got SIGINT.Shutting down...\n";
         exit;
     };
+
+    my $status_fh;
+    safe_open($status_fh, '>', $status_file, LOCK_EX);
+    print $status_fh JSON::XS::encode_json({});
+    safe_close($status_fh);
 
     for my $job (@$splitted_jobs) {
         my $pid = fork();
