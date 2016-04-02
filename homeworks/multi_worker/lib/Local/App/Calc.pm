@@ -7,20 +7,25 @@ use IO::Socket;
 use Local::App::SafeIO qw(socket_read socket_write);
 use Local::App::Calc::Parser    qw(rpn);
 use Local::App::Calc::Evaluator qw(evaluate);
+use POSIX qw(:sys_wait_h);
 
-#Определение обрабатываемых сигналов
 sub start_server {
-    # На вход получаем порт который будет слушать сервер занимающийся расчетами примеров
     my $port = shift;
+
+    my $conn_count = 0;
+    my $conn_limit = 3;
     
-    # Создание сервера и обработка входящих соединений, форки не нужны 
-    # Входящее и исходящее сообщение: int 4 byte + string
-    # На каждое подключение отдельный процесс. В рамках одного соединения может быть передано несколько примеров
-    $SIG{CHLD} = 'IGNORE';
+    $SIG{CHLD} = sub {
+        while (my $pid = waitpid(-1, WNOHANG)) {
+            last if $pid == -1;
+            --$conn_count if WIFEXITED($?);
+        }
+    };
     $SIG{INT} = sub {
         print "Calc got SIGINT.Shutting down...\n";
         exit;
     };
+
     my $server = IO::Socket::INET->new(
         LocalPort => $port,
         Type      => SOCK_STREAM,
@@ -28,13 +33,20 @@ sub start_server {
         Listen    => 10) 
     or die "Can't create server on port $port : $@ $/";
 
-    while(my $client = $server->accept()){
-        my $msg;
+    while (1){
+        my $client = $server->accept();
+        next if !defined($client);
+        last if !$client;
+
+        $conn_count += 1;
+        sleep(1) while $conn_count > $conn_limit;
+
         if (my $pid = fork()) {
             close($client);
         }
         else {
             die("Cannot fork: $!") if !defined($pid);
+            my $msg;
             while (socket_read($client, $msg, 4)) {
                 my $length = unpack 'L', $msg;
                 my $task;
