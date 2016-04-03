@@ -19,15 +19,17 @@ Local::Iterator::Array - array-based iterator
 sub init {
     my ($self, %args) = @_;
 
-    $self->{data} = [ @{ $args{array} } ];
+    $self->{data}  = $args{array};
+    $self->{index} = 0;
 }
 
 sub next {
     my ($self) = @_; 
 
-    my $end = (@{ $self->{data} } == 0);
-    my $val = shift @{ $self->{data} };
-    return ($val, $end);
+    return (
+        $self->{data}[$self->{index}++],
+        @{ $self->{data} } < $self->{index},
+    );
 }
 
 1;
