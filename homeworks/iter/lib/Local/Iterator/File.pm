@@ -35,7 +35,9 @@ sub next {
 
     my $end = eof($self->{data});
     my $val = readline($self->{data});
+
     chomp($val) if defined $val;
+
     return ($val, $end);
 }
 
