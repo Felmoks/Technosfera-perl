@@ -45,30 +45,26 @@ sub next {
 
     my $from = $self->{from}->clone;
     my $to;
+
     my $next_to   = $self->{from}->clone;
     $next_to->add_duration($self->{length}); 
+
     my $next_from = $self->{from}->clone;
     $next_from->add_duration($self->{step});
-    if (DateTime->compare(
-            $self->{to},
-            $next_to, 
-        ) > 0
-    ) {
+
+    if (DateTime->compare($self->{to}, $next_to) > 0) {
         $to = $next_to; 
     }
     else {
         $to = $self->{to}->clone;
-    };
-    if (DateTime->compare(
-            $self->{to},
-            $next_from, 
-        ) > 0
-    ) {
+    }
+
+    if (DateTime->compare($self->{to}, $next_from) > 0) {
         $self->{from} = $next_from; 
     }
     else {
         $self->{from} = $self->{to}->clone;
-    };
+    }
     
     my $ret = Local::Interval->new(
         from => $from,
