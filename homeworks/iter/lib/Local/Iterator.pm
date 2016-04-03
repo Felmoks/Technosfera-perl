@@ -2,6 +2,7 @@ package Local::Iterator;
 
 use strict;
 use warnings;
+use Moose;
 
 =encoding utf8
 
@@ -21,20 +22,11 @@ our $VERSION = '1.00';
 
 =cut
 
-sub new {
-    my ($class, %args) = @_;
-    my $self = bless {}, $class;
-    $self->init(%args);
-    return $self;
-}
+override BUILDARGS => sub {
+    my $class = shift;
 
-sub init {
-    die 'Unimplemented';
-}
-
-sub next {
-    die 'Unimplemented';
-}
+    return { @_ };
+};
 
 sub all {
     my ($self) = @_;

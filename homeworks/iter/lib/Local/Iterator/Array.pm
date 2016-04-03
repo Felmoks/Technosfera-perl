@@ -2,7 +2,8 @@ package Local::Iterator::Array;
 
 use strict;
 use warnings;
-use parent 'Local::Iterator';
+use Moose;
+extends 'Local::Iterator';
 
 =encoding utf8
 
@@ -16,19 +17,29 @@ Local::Iterator::Array - array-based iterator
 
 =cut
 
-sub init {
-    my ($self, %args) = @_;
+has array => (
+    is => 'ro',
+    isa => 'ArrayRef',
+    required => 1,
+);
 
-    $self->{data}  = $args{array};
-    $self->{index} = 0;
-}
+has _index => (
+    traits => ['Counter'],
+    is => 'ro',
+    isa => 'Num',
+    default => 0,
+    init_arg => undef,
+    handles => {
+        _inc => 'inc'
+    },
+);
 
 sub next {
     my ($self) = @_; 
 
     return (
-        $self->{data}[$self->{index}++],
-        @{ $self->{data} } < $self->{index},
+        $self->array->[$self->_index],
+        @{ $self->array } < $self->_inc,
     );
 }
 

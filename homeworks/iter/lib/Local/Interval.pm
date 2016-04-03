@@ -2,6 +2,7 @@ package Local::Interval;
 
 use strict;
 use warnings;
+use Moose;
 
 =encoding utf8
 
@@ -18,21 +19,17 @@ Local::Interval - time interval
 
 =cut
 
-sub new {
-    my ($class, %args) = @_;
+has from => (
+    is => 'ro',
+    isa => 'DateTime',
+    required => 1,
+);
 
-    return bless +{ %args }, $class;
-}
-
-sub from {
-    my ($self) = @_;
-    return $self->{from}; 
-}
-
-sub to {
-    my ($self) = @_;
-    return $self->{to};
-}
+has to => (
+    is => 'ro',
+    isa => 'DateTime',
+    required => 1,
+);
 
 1;
 

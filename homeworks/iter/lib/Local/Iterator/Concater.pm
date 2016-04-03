@@ -2,7 +2,9 @@ package Local::Iterator::Concater;
 
 use strict;
 use warnings;
-use parent 'Local::Iterator';
+use Moose; 
+
+extends 'Local::Iterator';
 
 =encoding utf8
 
@@ -21,22 +23,20 @@ Local::Iterator::Concater - concater of other iterators
 
 =cut
 
-sub init {
-    my ($self, %args) = @_;
-
-    $self->{data} = [ @{ $args{iterators} } ];
-    undef @{ $args{iterators} }; 
-}
+has iterators => (
+    is => 'ro',
+    isa => 'ArrayRef[ Local::Iterator ]',
+);
 
 sub next {
     my ($self) = @_; 
     
-    my ($val, $end) = $self->{data}[0]->next;
+    my ($val, $end) = $self->iterators->[0]->next;
 
-    return (undef, 1) if @{ $self->{data} } == 1 && $end;
+    return (undef, 1) if @{ $self->iterators } == 1 && $end;
     if ($end) {
-        shift @{ $self->{data} };
-        ($val, $end) = $self->{data}[0]->next;
+        shift @{ $self->iterators };
+        ($val, $end) = $self->iterators->[0]->next;
     }
 
     return ($val, $end);

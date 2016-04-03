@@ -2,7 +2,9 @@ package Local::Iterator::Aggregator;
 
 use strict;
 use warnings;
-use parent 'Local::Iterator';
+use Moose;
+
+extends 'Local::Iterator';
 
 =encoding utf8
 
@@ -19,23 +21,27 @@ Local::Iterator::Aggregator - aggregator of iterator
 
 =cut
 
-sub init {
-    my ($self, %args) = @_;
+has chunk_length => (
+    is => 'ro',
+    isa => 'Num',
+);
 
-    %$self = %args;
-}
+has iterator => (
+    is => 'ro',
+    isa => 'Local::Iterator',
+);
 
 sub next {
     my ($self) = @_; 
     
     my @chunk;
-    my ($val, $end) = $self->{iterator}->next;
+    my ($val, $end) = $self->iterator->next;
 
     while (!$end ) {
         push @chunk, $val;
     } continue {
-        last if @chunk == $self->{chunk_length};
-        ($val, $end) = $self->{iterator}->next;
+        last if @chunk == $self->chunk_length;
+        ($val, $end) = $self->iterator->next;
     }
 
     return (@chunk > 0 ? \@chunk : undef, @chunk == 0);
