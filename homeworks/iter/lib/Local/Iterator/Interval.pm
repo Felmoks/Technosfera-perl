@@ -35,6 +35,14 @@ sub init {
     $self->{length} = $self->{step} if !defined($self->{length});
 }
 
+sub _earliest {
+    my ($dt1, $dt2) = @_;
+
+    my $cmp = DateTime->compare($dt1, $dt2);
+
+    return $cmp < 0 ? $dt1->clone : $dt2->clone;
+}
+
 sub next {
     my ($self) = @_;
 
@@ -52,19 +60,9 @@ sub next {
     my $next_from = $self->{from}->clone;
     $next_from->add_duration($self->{step});
 
-    if (DateTime->compare($self->{to}, $next_to) > 0) {
-        $to = $next_to; 
-    }
-    else {
-        $to = $self->{to}->clone;
-    }
+    $to = _earliest($next_to, $self->{to});
 
-    if (DateTime->compare($self->{to}, $next_from) > 0) {
-        $self->{from} = $next_from; 
-    }
-    else {
-        $self->{from} = $self->{to}->clone;
-    }
+    $self->{from} = _earliest($next_from, $self->{to});
     
     my $ret = Local::Interval->new(
         from => $from,
