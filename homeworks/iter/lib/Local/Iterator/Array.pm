@@ -18,9 +18,13 @@ Local::Iterator::Array - array-based iterator
 =cut
 
 has array => (
-    is => 'ro',
+    traits => ['Array'],
     isa => 'ArrayRef',
     required => 1,
+    handles => {
+        _get   => 'get',
+        _count => 'count',
+    },
 );
 
 has _index => (
@@ -38,8 +42,8 @@ sub next {
     my ($self) = @_; 
 
     return (
-        $self->array->[$self->_index],
-        @{ $self->array } < $self->_inc,
+        $self->_get($self->_index),
+        $self->_count < $self->_inc,
     );
 }
 
