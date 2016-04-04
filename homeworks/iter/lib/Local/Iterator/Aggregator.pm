@@ -2,6 +2,7 @@ package Local::Iterator::Aggregator;
 
 use strict;
 use warnings;
+use parent 'Local::Iterator';
 
 =encoding utf8
 
@@ -17,5 +18,28 @@ Local::Iterator::Aggregator - aggregator of iterator
     );
 
 =cut
+
+sub init {
+    my ($self, %args) = @_;
+
+    %$self = %args;
+}
+
+sub next {
+    my ($self) = @_; 
+    
+    my @chunk;
+    my ($val, $end) = $self->{iterator}->next;
+
+    while (!$end ) {
+        push @chunk, $val;
+    } continue {
+        last if @chunk == $self->{chunk_length};
+        ($val, $end) = $self->{iterator}->next;
+    }
+
+    return (@chunk > 0 ? \@chunk : undef, @chunk == 0);
+}
+
 
 1;

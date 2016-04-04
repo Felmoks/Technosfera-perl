@@ -21,4 +21,32 @@ our $VERSION = '1.00';
 
 =cut
 
+sub new {
+    my ($class, %args) = @_;
+    my $self = bless {}, $class;
+    $self->init(%args);
+    return $self;
+}
+
+sub init {
+    die 'Unimplemented';
+}
+
+sub next {
+    die 'Unimplemented';
+}
+
+sub all {
+    my ($self) = @_;
+    my @rest = ();
+
+    my ($val, $end) = $self->next;
+    while (!$end) {
+        push @rest, $val;
+        ($val, $end) = $self->next;
+    }
+
+    return \@rest;
+}
+
 1;

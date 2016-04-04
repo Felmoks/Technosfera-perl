@@ -2,6 +2,7 @@ package Local::Iterator::Concater;
 
 use strict;
 use warnings;
+use parent 'Local::Iterator';
 
 =encoding utf8
 
@@ -19,5 +20,28 @@ Local::Iterator::Concater - concater of other iterators
     );
 
 =cut
+
+sub init {
+    my ($self, %args) = @_;
+
+    $self->{data} = [ @{ $args{iterators} } ];
+    undef @{ $args{iterators} }; 
+}
+
+sub next {
+    my ($self) = @_; 
+    
+    my ($val, $end) = $self->{data}[0]->next;
+
+    return (undef, 1) if @{ $self->{data} } == 1 && $end;
+    if ($end) {
+        shift @{ $self->{data} };
+        ($val, $end) = $self->{data}[0]->next;
+    }
+
+    return ($val, $end);
+
+}
+
 
 1;
