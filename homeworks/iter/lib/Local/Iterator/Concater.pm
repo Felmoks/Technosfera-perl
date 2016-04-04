@@ -26,6 +26,7 @@ Local::Iterator::Concater - concater of other iterators
 has iterators => (
     is => 'ro',
     isa => 'ArrayRef[ Local::Iterator ]',
+    required => 1,
 );
 
 sub next {

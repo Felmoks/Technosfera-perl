@@ -24,11 +24,13 @@ Local::Iterator::Aggregator - aggregator of iterator
 has chunk_length => (
     is => 'ro',
     isa => 'Num',
+    required => 1,
 );
 
 has iterator => (
     is => 'ro',
     isa => 'Local::Iterator',
+    required => 1,
 );
 
 sub next {
