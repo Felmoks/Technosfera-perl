@@ -12,17 +12,18 @@ use POSIX qw(:sys_wait_h);
 sub start_server {
     my $port = shift;
 
-    my $conn_count = 0;
+    my %workers;
     my $conn_limit = 3;
     
     $SIG{CHLD} = sub {
         while (my $pid = waitpid(-1, WNOHANG)) {
             last if $pid == -1;
-            --$conn_count if WIFEXITED($?);
+            delete $workers{$pid} if WIFEXITED($?);
         }
     };
     $SIG{INT} = sub {
         print "Calc got SIGINT.Shutting down...\n";
+        kill 'INT', (keys %workers);
         exit;
     };
 
@@ -38,14 +39,15 @@ sub start_server {
         next if !defined($client);
         last if !$client;
 
-        $conn_count += 1;
-        sleep(1) while $conn_count > $conn_limit;
+        sleep(1) while (keys %workers) > $conn_limit;
 
         if (my $pid = fork()) {
             close($client);
+            $workers{$pid} = 1;
         }
         else {
             die("Cannot fork: $!") if !defined($pid);
+            %workers = ();
             my $msg;
             while (socket_read($client, $msg, 4)) {
                 my $length = unpack 'L', $msg;
