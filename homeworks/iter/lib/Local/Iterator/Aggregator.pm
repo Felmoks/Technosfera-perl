@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Moose;
 
-extends 'Local::Iterator';
+with 'Local::Iterator';
 
 =encoding utf8
 
@@ -29,7 +29,7 @@ has chunk_length => (
 
 has iterator => (
     is => 'ro',
-    isa => 'Local::Iterator',
+    does => 'Local::Iterator',
     required => 1,
 );
 
@@ -39,7 +39,7 @@ sub next {
     my @chunk;
     my ($val, $end) = $self->iterator->next;
 
-    while (!$end ) {
+    while (!$end) {
         push @chunk, $val;
     } continue {
         last if @chunk == $self->chunk_length;

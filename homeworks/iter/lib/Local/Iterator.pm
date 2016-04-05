@@ -2,7 +2,7 @@ package Local::Iterator;
 
 use strict;
 use warnings;
-use Moose;
+use Moose::Role;
 
 =encoding utf8
 
@@ -21,6 +21,8 @@ our $VERSION = '1.00';
 =head1 SYNOPSIS
 
 =cut
+
+requires 'next';
 
 sub all {
     my ($self) = @_;

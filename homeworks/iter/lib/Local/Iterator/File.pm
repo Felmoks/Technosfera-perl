@@ -3,7 +3,8 @@ package Local::Iterator::File;
 use strict;
 use warnings;
 use Moose;
-extends 'Local::Iterator';
+
+with 'Local::Iterator';
 
 =encoding utf8
 

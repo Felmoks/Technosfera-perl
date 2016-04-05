@@ -7,7 +7,7 @@ use DateTime::Duration;
 use Local::Interval;
 use Moose;
 
-extends 'Local::Iterator';
+with 'Local::Iterator';
 
 =encoding utf8
 
