@@ -64,17 +64,23 @@ sub collect_results {
     
     while (my $pid = waitpid(-1, WNOHANG)) {
         last if $pid == -1;
+        my $results_file = delete $workers->{$pid};
         if (WIFEXITED($?)) {
-            my $results_file = delete $workers->{$pid};
+            if (WEXITSTATUS($?) != 0) {
+                kill 'INT', (keys %$workers);
+                next;
+            }
             open(my $worker_results, '<', $results_file);
             push @$results, $_ while (<$worker_results>);
             close($worker_results);
-            unlink "results_$pid.txt";
         }
         elsif (WIFSIGNALED($?)) {
+            kill 'INT', (keys %$workers);
             my $sig = WTERMSIG($?);
-            print "CAUGHT $sig\n";
+            print "WORKER $pid CAUGHT $sig\n";
         }
+    } continue {
+        unlink "results_$pid.txt" if $pid > 0;
     }
 }
 
@@ -93,8 +99,8 @@ sub multi_calc {
     };
 
     $SIG{INT} = sub {
-        print "ProcessCalc got SIGINT.Shutting down...\n";
-        exit;
+        kill 'INT', (keys %$workers);
+        die "ProcessCalc master got SIGINT.Shutting down...\n";
     };
 
     my $status_fh;
@@ -109,6 +115,8 @@ sub multi_calc {
             next;
         }
         die("Cannot fork: $!") if !defined($pid);
+
+        $SIG{INT} = "DEFAULT";
 
         update_status('status', 'READY');
 
@@ -134,6 +142,8 @@ sub multi_calc {
 
     while (keys %$workers) {
         #Doing something while workers are active
+        #print Dumper $workers;
+        sleep(5);
     }
 
 
