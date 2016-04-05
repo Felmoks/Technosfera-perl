@@ -26,6 +26,7 @@ sub update_status {
     }
     else {
         $workers->{$$}{status} = $value;
+        $workers->{$$}{cnt} = 0 if $value eq 'READY';
     }
 
     seek($status_fh, 0, SEEK_SET) or die("Cannot seek: $!");
