@@ -22,12 +22,6 @@ our $VERSION = '1.00';
 
 =cut
 
-override BUILDARGS => sub {
-    my $class = shift;
-
-    return { @_ };
-};
-
 sub all {
     my ($self) = @_;
     my @rest = ();
