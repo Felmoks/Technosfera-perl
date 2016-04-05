@@ -21,7 +21,7 @@ Local::Interval - time interval
 sub new {
     my ($class, %args) = @_;
 
-    return bless +{ %args }, $class;
+    return bless \%args, $class;
 }
 
 sub from {
